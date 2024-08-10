@@ -1,0 +1,134 @@
+﻿@using static BlazorApp.Responses.CustomResponses
+
+@page "/product"
+
+@rendermode InteractiveServer
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6">
+            <h2>Products</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Stock</th>
+                        <th scope="col">Manufacture Method</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (response == null)
+                    {
+                        <tr>
+                            <th>
+                                <p><em>Loading...</em></p>
+
+                            </th> 
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var product in response.products)
+                        {
+                        <tr>
+                            <th scope="row">@product.Id</th>
+                            <td>@product.Name</td>
+                            <td>@product.Stock</td>
+                            <td>@product.ManufactureMethod</td>
+                            <td>
+                                <a href="/inventory/@product.Id" class="btn btn-sm btn-secondary">
+                                    Check Inventory
+                                </a>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteProduct(product.Id)">
+                                    X
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        }
+                        
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <h2>Add Product</h2>
+            <EditForm Model="@product" OnValidSubmit="RegisterProductClicked">
+                <DataAnnotationsValidator />
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <InputText @bind-Value="product.Name" class="form-control"></InputText>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Manufacture Method</label>
+                    <select class="form-select" @bind="product.ManufactureMethod" aria-label="Default select method">
+                        <option disabled>Select Method</option>
+                        @foreach (var method in Enum.GetValues(typeof(Methods)) )
+                        {
+                            <option value="@method">@method.ToString()</option>
+                        }
+                    </select>
+
+                </div>
+                <div class="form-group mt-3 ">
+                    <button class="btn btn-primary" type="submit">Add Product</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private GetProductsResponse? response;
+
+    private ProductDTO product = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetProducts();
+    }
+
+    async Task GetProducts()
+    {
+        response = await productService.GetProductsAsync();
+    }
+
+    async Task DeleteProduct(int id)
+    {
+        DeleteProductResponse res = await productService.DeleteProductAsync(id);
+       
+        if (!res.Flag)
+        {
+            await js.InvokeVoidAsync("alert", res.Message);
+            return;
+        }
+
+        await js.InvokeVoidAsync("alert", res.Message);
+
+        await GetProducts();
+    }
+
+    async Task RegisterProductClicked()
+    {
+
+        RegisterProductResponse res = await productService.RegisterProductAsync(product);
+
+        if (!res.Flag)
+        {
+            await js.InvokeVoidAsync("alert", res.Message);
+            return;
+        }
+
+        await js.InvokeVoidAsync("alert", res.Message);
+        product = new();
+        await GetProducts();
+
+    }
+}

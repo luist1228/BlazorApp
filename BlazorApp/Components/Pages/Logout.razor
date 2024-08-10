@@ -1,0 +1,14 @@
+﻿@rendermode InteractiveServer
+@page "/logout"
+@code {
+
+    
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        var customeAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        customeAuthStateProvider.UpdateAuthenticationState("");
+        NavManager.NavigateTo("/", forceLoad: true);
+    }
+
+}

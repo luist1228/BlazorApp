@@ -1,0 +1,46 @@
+﻿@using static BlazorApp.Responses.CustomResponses
+
+@page "/login"
+
+@rendermode InteractiveServer
+
+<div class=" container">
+    <div class="row">
+        <div class="col-sm-4">
+            <h2>Login</h2>
+            <EditForm Model="@login" OnValidSubmit="LoginClicked" >
+                <DataAnnotationsValidator/>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <InputText @bind-Value="login.Email" class="form-control"></InputText>
+                </div>
+                <div class="form-group mt-3">
+                    <label class="form-label">Password</label>
+                    <InputText @bind-Value="login.Password" type="password" class="form-control"></InputText>
+                </div>
+                <div class="form-group mt-3 ">
+                    <button class="btn btn-primary" type="submit">Login</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    public LoginDTO login = new();
+
+    async Task LoginClicked()
+    {
+        LoginResponse response = await accountService.LoginAsync(login);
+
+        if(!response.Flag)
+        {
+            await js.InvokeVoidAsync("alert", response.Message);
+            return;
+        }
+
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        customAuthStateProvider.UpdateAuthenticationState(response.JWTToken);
+        NavManager.NavigateTo("/", forceLoad: true);
+    }
+}

@@ -1,0 +1,20 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4">
+            <h1>Welcome</h1>
+            <AuthorizeView>
+                <Authorized>
+                    <h3>Hi, @context.User.Identity!.Name</h3>
+                </Authorized>
+                <NotAuthorized>
+                    <h3>You are not logged in</h3>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</div>

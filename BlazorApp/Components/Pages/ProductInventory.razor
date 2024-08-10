@@ -1,0 +1,135 @@
+﻿@page "/inventory/{id:int}"
+@using static BlazorApp.Responses.InventoryReponses
+@rendermode InteractiveServer
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-8">
+            <h2>Inventory - Product:
+                @if(response!= null && response.Product !=null){
+                    <span>
+                        @response.Product.Name
+                    </span>
+                    <span>
+                        Stock:@response.Product.Stock
+                    </span>
+                }
+            </h2>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">IO</th>
+                        <th scope="col">Added Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (response != null && response.Product != null )
+                    {
+                        
+                        @foreach (var item in response.Product!.Inventory)
+                        {
+                            <tr>
+                                <th scope="row">@item.Id</th>
+                                <th scope="row">@item.Quantity</th>
+                                <th scope="row">@item.Status</th>
+                                <th scope="row">@item.IO</th>
+                                <th scope="row">@item.Created</th>
+
+                            </tr>
+                        }
+
+
+                    }
+                    else
+                    {
+                        <tr>
+                            <th>
+                                <p><em>Loading...</em></p>
+                            </th>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-4">
+                <h2>Add or remove item</h2>
+                <EditForm Model="@inventory" OnValidSubmit="RegisterInventoryClicked">
+                    <DataAnnotationsValidator/>
+
+                    <div class="form-group">
+                        <label class="form-label">IO</label>
+                        <select class="form-select" @bind="inventory.IO" aria-label="Default IO">
+                            @foreach (var method in Enum.GetValues(typeof(IO)))
+                            {
+                                <option value="@method">@method.ToString()</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" @bind="inventory.Quantity" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" @bind="inventory.Status" aria-label="Default Status">
+                            @foreach (var status in Enum.GetValues(typeof(Status)))
+                            {
+                                <option value="@status">@status.ToString()</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group mt-3 ">
+                        <button class="btn btn-primary" type="submit">Add Items</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+
+        
+    </div>
+</div>
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    private GetInventoryResponse? response;
+
+    private InventoryDTO inventory = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetInventory();
+    }
+
+    async Task GetInventory()
+    {
+        inventory.ProductId = id;
+        response = await inventoryService.GetInventoryAsync(id);
+
+    }
+
+    async Task RegisterInventoryClicked()
+    {
+        RegisterInventoryResponse res = await inventoryService.RegisterInventoryAsync(inventory);
+        if (!res.Flag)
+        {
+            inventory = new();
+            inventory.ProductId = id;
+
+            await js.InvokeVoidAsync("alert", res.Message);
+            return;
+        }
+
+        await js.InvokeVoidAsync("alert", res.Message);
+        inventory = new();
+        await GetInventory();
+    }
+
+
+}
