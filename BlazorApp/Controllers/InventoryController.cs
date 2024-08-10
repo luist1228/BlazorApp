@@ -7,6 +7,7 @@ using static BlazorApp.Responses.InventoryReponses;
 namespace BlazorApp.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
     public class InventoryController : ControllerBase
     {
